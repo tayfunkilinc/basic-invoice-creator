@@ -56,6 +56,13 @@ const InvoiceForm = ({ onSubmit, initialData, systemLanguage, onSystemLanguageCh
       { id: '1', quantity: 1, description: '', unitPrice: 0, amount: 0 },
     ]
   );
+  const [priceInputs, setPriceInputs] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    (initialData?.items || [{ id: '1', unitPrice: 0 }]).forEach(item => {
+      initial[item.id] = item.unitPrice > 0 ? String(item.unitPrice) : '';
+    });
+    return initial;
+  });
   const [currencySearch, setCurrencySearch] = useState('');
 
   const getCurrencySymbol = () => {
@@ -145,21 +152,38 @@ const InvoiceForm = ({ onSubmit, initialData, systemLanguage, onSystemLanguageCh
   };
 
   const addItem = () => {
+    const newId = Date.now().toString();
     setItems([
       ...items,
       {
-        id: Date.now().toString(),
+        id: newId,
         quantity: 1,
         description: '',
         unitPrice: 0,
         amount: 0,
       },
     ]);
+    setPriceInputs(prev => ({ ...prev, [newId]: '' }));
   };
 
   const removeItem = (id: string) => {
     if (items.length > 1) {
       setItems(items.filter((item) => item.id !== id));
+      setPriceInputs(prev => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+    }
+  };
+
+  const handlePriceInputChange = (id: string, value: string) => {
+    // Allow numbers, dot, and comma (for different locales)
+    const normalized = value.replace(',', '.');
+    if (normalized === '' || /^[0-9]*\.?[0-9]*$/.test(normalized)) {
+      setPriceInputs(prev => ({ ...prev, [id]: value }));
+      const numVal = parseFloat(normalized) || 0;
+      handleItemChange(id, 'unitPrice', numVal);
     }
   };
 
@@ -572,7 +596,7 @@ const InvoiceForm = ({ onSubmit, initialData, systemLanguage, onSystemLanguageCh
                     className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
               />
             </div>
-              </div>
+            </div>
           </div>
 
             {/* Ürün/Hizmetler */}
@@ -624,22 +648,16 @@ const InvoiceForm = ({ onSubmit, initialData, systemLanguage, onSystemLanguageCh
                       <div className="col-span-6 md:col-span-2">
                         <label className="block text-xs font-medium text-slate-400 mb-1">
                           {ui.unitPrice} ({getCurrencySymbol()})
-                    </label>
-                    <input
-                      type="number"
-                      value={item.unitPrice}
-                      onChange={(e) =>
-                        handleItemChange(
-                          item.id,
-                          'unitPrice',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      required
-                      min="0"
-                          step="any"
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={priceInputs[item.id] ?? ''}
+                          onChange={(e) => handlePriceInputChange(item.id, e.target.value)}
+                          required
                           className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
+                          placeholder="0.00"
+                        />
                   </div>
 
                       <div className="col-span-4 md:col-span-2">
