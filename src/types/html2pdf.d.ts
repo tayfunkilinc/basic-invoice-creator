@@ -3,7 +3,7 @@ declare module 'html2pdf.js' {
     margin?: number | number[];
     filename?: string;
     image?: {
-      type?: string;
+      type?: 'jpeg' | 'png' | 'webp';
       quality?: number;
     };
     html2canvas?: {
@@ -15,9 +15,9 @@ declare module 'html2pdf.js' {
       backgroundColor?: string;
     };
     jsPDF?: {
-      unit?: string;
-      format?: string;
-      orientation?: string;
+      unit?: 'pt' | 'mm' | 'cm' | 'in' | 'px' | 'pc' | 'em' | 'ex' | string;
+      format?: 'a0' | 'a1' | 'a2' | 'a3' | 'a4' | 'a5' | 'a6' | 'a7' | 'a8' | 'a9' | 'a10' | 'letter' | 'legal' | string;
+      orientation?: 'portrait' | 'landscape';
     };
     pagebreak?: {
       mode?: string | string[];
@@ -27,7 +27,7 @@ declare module 'html2pdf.js' {
 
   interface Html2Pdf {
     set(options: Html2PdfOptions): Html2Pdf;
-    from(element: HTMLElement | null): Html2Pdf;
+    from(element: string | HTMLElement | HTMLCanvasElement | HTMLImageElement): Html2Pdf;
     save(): Promise<void>;
   }
 
